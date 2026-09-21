@@ -1,0 +1,9 @@
+[package]
+name = "oas-can"
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+description = "OAS CAN and CAN FD primitives"
+
+[lib]
+path = "src/lib.rs"
