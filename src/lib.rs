@@ -3,4 +3,5 @@
 #![forbid(unsafe_code)]
 
 pub mod decode;
+pub mod fixture;
 pub mod frame;

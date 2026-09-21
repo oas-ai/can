@@ -7,7 +7,7 @@ pub const CLASSIC_CAN_MAX_DATA_LENGTH: usize = 8;
 pub const CAN_FD_MAX_DATA_LENGTH: usize = 64;
 
 /// 표준 또는 확장 CAN identifier다.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum CanId {
     Standard(u16),
     Extended(u32),
