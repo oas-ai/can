@@ -29,7 +29,11 @@ impl GenesisG80Decoder {
         }
     }
 
-    fn data_as_u64(frame: &CanFrame, message_name: &'static str, expected: usize) -> Result<u64, GenesisG80DecodeError> {
+    fn data_as_u64(
+        frame: &CanFrame,
+        message_name: &'static str,
+        expected: usize,
+    ) -> Result<u64, GenesisG80DecodeError> {
         if frame.data.len() != expected {
             return Err(GenesisG80DecodeError::UnexpectedFrameLength {
                 message_name,
@@ -43,7 +47,10 @@ impl GenesisG80Decoder {
         Ok(u64::from_le_bytes(bytes))
     }
 
-    fn decode_clu11(frame: &CanFrame, context: DecodeContext) -> Result<DecodedCanMessage, GenesisG80DecodeError> {
+    fn decode_clu11(
+        frame: &CanFrame,
+        context: DecodeContext,
+    ) -> Result<DecodedCanMessage, GenesisG80DecodeError> {
         let data = Self::data_as_u64(frame, "CLU11", 4)?;
         let speed = ((data >> 8) & 0x1ff) as f64 * 0.5 + ((data >> 6) & 0x3) as f64 * 0.125;
         let unit = if (data >> 17) & 1 == 0 { "kph" } else { "mph" };
@@ -54,7 +61,10 @@ impl GenesisG80Decoder {
         Ok(message)
     }
 
-    fn decode_sas11(frame: &CanFrame, context: DecodeContext) -> Result<DecodedCanMessage, GenesisG80DecodeError> {
+    fn decode_sas11(
+        frame: &CanFrame,
+        context: DecodeContext,
+    ) -> Result<DecodedCanMessage, GenesisG80DecodeError> {
         let data = Self::data_as_u64(frame, "SAS11", 5)?;
         let angle = (data as i16) as f64 * 0.1;
 
@@ -63,7 +73,10 @@ impl GenesisG80Decoder {
         Ok(message)
     }
 
-    fn decode_tcs13(frame: &CanFrame, context: DecodeContext) -> Result<DecodedCanMessage, GenesisG80DecodeError> {
+    fn decode_tcs13(
+        frame: &CanFrame,
+        context: DecodeContext,
+    ) -> Result<DecodedCanMessage, GenesisG80DecodeError> {
         let data = Self::data_as_u64(frame, "TCS13", 8)?;
         let driver_override = ((data >> 45) & 0x3) as f64;
 
@@ -76,7 +89,11 @@ impl GenesisG80Decoder {
 impl FrameDecoder for GenesisG80Decoder {
     type Error = GenesisG80DecodeError;
 
-    fn decode(&self, frame: &CanFrame, context: DecodeContext) -> Result<Option<DecodedCanMessage>, Self::Error> {
+    fn decode(
+        &self,
+        frame: &CanFrame,
+        context: DecodeContext,
+    ) -> Result<Option<DecodedCanMessage>, Self::Error> {
         let decoded = match Self::standard_id(frame) {
             Some(CLU11) => Some(Self::decode_clu11(frame, context)?),
             Some(SAS11) => Some(Self::decode_sas11(frame, context)?),
@@ -102,24 +119,52 @@ mod tests {
 
     #[test]
     fn decodes_cluster_speed_in_kph() {
-        let frame = CanFrame::new(CanId::standard(1265).unwrap(), vec![0, 160, 0, 0], false).unwrap();
-        let message = GenesisG80Decoder.decode(&frame, context()).unwrap().unwrap();
+        let frame =
+            CanFrame::new(CanId::standard(1265).unwrap(), vec![0, 160, 0, 0], false).unwrap();
+        let message = GenesisG80Decoder
+            .decode(&frame, context())
+            .unwrap()
+            .unwrap();
 
         assert_eq!(message.message_name, "CLU11");
-        assert_eq!(message.signals.get("CF_Clu_Vanz"), Some(&SignalValue::Number(80.0)));
-        assert_eq!(message.signals.get("CF_Clu_SPEED_UNIT"), Some(&SignalValue::Enumeration("kph".into())));
+        assert_eq!(
+            message.signals.get("CF_Clu_Vanz"),
+            Some(&SignalValue::Number(80.0))
+        );
+        assert_eq!(
+            message.signals.get("CF_Clu_SPEED_UNIT"),
+            Some(&SignalValue::Enumeration("kph".into()))
+        );
     }
 
     #[test]
     fn decodes_steering_and_driver_braking() {
-        let steering = CanFrame::new(CanId::standard(688).unwrap(), vec![132, 3, 0, 0, 0], false).unwrap();
-        let braking = CanFrame::new(CanId::standard(916).unwrap(), vec![0, 0, 0, 0, 0, 64, 0, 0], false).unwrap();
+        let steering =
+            CanFrame::new(CanId::standard(688).unwrap(), vec![132, 3, 0, 0, 0], false).unwrap();
+        let braking = CanFrame::new(
+            CanId::standard(916).unwrap(),
+            vec![0, 0, 0, 0, 0, 64, 0, 0],
+            false,
+        )
+        .unwrap();
 
-        let steering_message = GenesisG80Decoder.decode(&steering, context()).unwrap().unwrap();
-        let braking_message = GenesisG80Decoder.decode(&braking, context()).unwrap().unwrap();
+        let steering_message = GenesisG80Decoder
+            .decode(&steering, context())
+            .unwrap()
+            .unwrap();
+        let braking_message = GenesisG80Decoder
+            .decode(&braking, context())
+            .unwrap()
+            .unwrap();
 
-        assert_eq!(steering_message.signals.get("SAS_Angle"), Some(&SignalValue::Number(90.0)));
-        assert_eq!(braking_message.signals.get("DriverOverride"), Some(&SignalValue::Number(2.0)));
+        assert_eq!(
+            steering_message.signals.get("SAS_Angle"),
+            Some(&SignalValue::Number(90.0))
+        );
+        assert_eq!(
+            braking_message.signals.get("DriverOverride"),
+            Some(&SignalValue::Number(2.0))
+        );
     }
 
     #[test]
