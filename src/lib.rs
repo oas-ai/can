@@ -5,3 +5,4 @@
 pub mod decode;
 pub mod fixture;
 pub mod frame;
+pub mod genesis_g80;

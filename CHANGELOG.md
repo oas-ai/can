@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add a read-only Genesis G80 2017 decoder for cluster speed, steering angle, and driver braking.
+
 ## [0.1.0] - 2026-09-21
 
 - Rust CAN library 초기 구조와 CI를 추가했습니다.
