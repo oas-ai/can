@@ -47,12 +47,15 @@ impl FrameDecoder for FixtureDecoder {
         frame: &CanFrame,
         context: DecodeContext,
     ) -> Result<Option<DecodedCanMessage>, Self::Error> {
-        Ok(self.messages.get(&frame.id).map(|fixture| DecodedCanMessage {
-            frame_id: frame.id,
-            message_name: fixture.message_name.clone(),
-            context,
-            signals: fixture.signals.clone(),
-        }))
+        Ok(self
+            .messages
+            .get(&frame.id)
+            .map(|fixture| DecodedCanMessage {
+                frame_id: frame.id,
+                message_name: fixture.message_name.clone(),
+                context,
+                signals: fixture.signals.clone(),
+            }))
     }
 }
 
