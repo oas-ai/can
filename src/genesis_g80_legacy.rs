@@ -172,7 +172,9 @@ mod tests {
         let frame = CanFrame::new(CanId::standard(688).unwrap(), vec![0; 4], false).unwrap();
 
         assert_eq!(
-            GenesisG80LegacyDecoder.decode(&frame, context()).unwrap_err(),
+            GenesisG80LegacyDecoder
+                .decode(&frame, context())
+                .unwrap_err(),
             GenesisG80LegacyDecodeError::UnexpectedFrameLength {
                 message_name: "SAS11",
                 expected: 5,
