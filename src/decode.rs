@@ -71,11 +71,8 @@ mod tests {
             timestamp_ns: Some(42),
             bus: 0,
         };
-        let mut message = DecodedCanMessage::new(
-            CanId::standard(0x123).unwrap(),
-            "example_message",
-            context,
-        );
+        let mut message =
+            DecodedCanMessage::new(CanId::standard(0x123).unwrap(), "example_message", context);
 
         message.insert_signal("speed", SignalValue::Number(12.5));
         message.insert_signal("enabled", SignalValue::Boolean(true));
