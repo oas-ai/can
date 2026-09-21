@@ -1,6 +1,6 @@
-# Genesis G80 Decoder
+# Genesis G80 Legacy Decoder
 
-`GenesisG80Decoder`는 `dbc` 저장소의 `GENESIS_G80_2017` provenance manifest에
+`GenesisG80LegacyDecoder`는 `dbc` 저장소의 `GENESIS_G80_2017` provenance manifest에
 고정된 Hyundai legacy CAN DBC 중 상태에 필요한 세 메시지만 직접 해석합니다.
 
 | DBC message | 신호 | OAS 용도 |

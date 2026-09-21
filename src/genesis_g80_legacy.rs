@@ -1,4 +1,4 @@
-//! Genesis G80 2017 Hyundai legacy CAN의 read-only DBC subset decoder다.
+//! Genesis G80 2017 legacy CAN의 read-only DBC subset decoder다.
 
 use crate::decode::{DecodeContext, DecodedCanMessage, FrameDecoder, SignalValue};
 use crate::frame::{CanFrame, CanId};
@@ -9,7 +9,7 @@ const TCS13: u16 = 916;
 
 /// 승인된 Genesis DBC subset을 해석하지 못한 오류다.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum GenesisG80DecodeError {
+pub enum GenesisG80LegacyDecodeError {
     UnexpectedFrameLength {
         message_name: &'static str,
         expected: usize,
@@ -19,9 +19,9 @@ pub enum GenesisG80DecodeError {
 
 /// Genesis G80 2017의 `hyundai_can.dbc` read-only subset decoder다.
 #[derive(Debug, Default)]
-pub struct GenesisG80Decoder;
+pub struct GenesisG80LegacyDecoder;
 
-impl GenesisG80Decoder {
+impl GenesisG80LegacyDecoder {
     fn standard_id(frame: &CanFrame) -> Option<u16> {
         match frame.id {
             CanId::Standard(id) => Some(id),
@@ -33,9 +33,9 @@ impl GenesisG80Decoder {
         frame: &CanFrame,
         message_name: &'static str,
         expected: usize,
-    ) -> Result<u64, GenesisG80DecodeError> {
+    ) -> Result<u64, GenesisG80LegacyDecodeError> {
         if frame.data.len() != expected {
-            return Err(GenesisG80DecodeError::UnexpectedFrameLength {
+            return Err(GenesisG80LegacyDecodeError::UnexpectedFrameLength {
                 message_name,
                 expected,
                 actual: frame.data.len(),
@@ -50,7 +50,7 @@ impl GenesisG80Decoder {
     fn decode_clu11(
         frame: &CanFrame,
         context: DecodeContext,
-    ) -> Result<DecodedCanMessage, GenesisG80DecodeError> {
+    ) -> Result<DecodedCanMessage, GenesisG80LegacyDecodeError> {
         let data = Self::data_as_u64(frame, "CLU11", 4)?;
         let speed = ((data >> 8) & 0x1ff) as f64 * 0.5 + ((data >> 6) & 0x3) as f64 * 0.125;
         let unit = if (data >> 17) & 1 == 0 { "kph" } else { "mph" };
@@ -64,7 +64,7 @@ impl GenesisG80Decoder {
     fn decode_sas11(
         frame: &CanFrame,
         context: DecodeContext,
-    ) -> Result<DecodedCanMessage, GenesisG80DecodeError> {
+    ) -> Result<DecodedCanMessage, GenesisG80LegacyDecodeError> {
         let data = Self::data_as_u64(frame, "SAS11", 5)?;
         let angle = (data as i16) as f64 * 0.1;
 
@@ -76,7 +76,7 @@ impl GenesisG80Decoder {
     fn decode_tcs13(
         frame: &CanFrame,
         context: DecodeContext,
-    ) -> Result<DecodedCanMessage, GenesisG80DecodeError> {
+    ) -> Result<DecodedCanMessage, GenesisG80LegacyDecodeError> {
         let data = Self::data_as_u64(frame, "TCS13", 8)?;
         let driver_override = ((data >> 45) & 0x3) as f64;
 
@@ -86,8 +86,8 @@ impl GenesisG80Decoder {
     }
 }
 
-impl FrameDecoder for GenesisG80Decoder {
-    type Error = GenesisG80DecodeError;
+impl FrameDecoder for GenesisG80LegacyDecoder {
+    type Error = GenesisG80LegacyDecodeError;
 
     fn decode(
         &self,
@@ -108,7 +108,7 @@ impl FrameDecoder for GenesisG80Decoder {
 mod tests {
     use crate::decode::{DecodeContext, FrameDecoder, SignalValue};
     use crate::frame::{CanFrame, CanId};
-    use crate::genesis_g80::{GenesisG80DecodeError, GenesisG80Decoder};
+    use crate::genesis_g80_legacy::{GenesisG80LegacyDecodeError, GenesisG80LegacyDecoder};
 
     fn context() -> DecodeContext {
         DecodeContext {
@@ -121,7 +121,7 @@ mod tests {
     fn decodes_cluster_speed_in_kph() {
         let frame =
             CanFrame::new(CanId::standard(1265).unwrap(), vec![0, 160, 0, 0], false).unwrap();
-        let message = GenesisG80Decoder
+        let message = GenesisG80LegacyDecoder
             .decode(&frame, context())
             .unwrap()
             .unwrap();
@@ -148,11 +148,11 @@ mod tests {
         )
         .unwrap();
 
-        let steering_message = GenesisG80Decoder
+        let steering_message = GenesisG80LegacyDecoder
             .decode(&steering, context())
             .unwrap()
             .unwrap();
-        let braking_message = GenesisG80Decoder
+        let braking_message = GenesisG80LegacyDecoder
             .decode(&braking, context())
             .unwrap()
             .unwrap();
@@ -172,8 +172,8 @@ mod tests {
         let frame = CanFrame::new(CanId::standard(688).unwrap(), vec![0; 4], false).unwrap();
 
         assert_eq!(
-            GenesisG80Decoder.decode(&frame, context()).unwrap_err(),
-            GenesisG80DecodeError::UnexpectedFrameLength {
+            GenesisG80LegacyDecoder.decode(&frame, context()).unwrap_err(),
+            GenesisG80LegacyDecodeError::UnexpectedFrameLength {
                 message_name: "SAS11",
                 expected: 5,
                 actual: 4,
