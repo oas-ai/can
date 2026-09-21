@@ -71,7 +71,7 @@ pub enum CanFrameError {
 
 #[cfg(test)]
 mod tests {
-    use super::{CanFrame, CanFrameError, CanId, CAN_FD_MAX_DATA_LENGTH};
+    use super::{CAN_FD_MAX_DATA_LENGTH, CanFrame, CanFrameError, CanId};
 
     #[test]
     fn accepts_a_standard_classic_can_frame() {
@@ -82,8 +82,7 @@ mod tests {
 
     #[test]
     fn rejects_a_classic_can_payload_larger_than_eight_bytes() {
-        let error = CanFrame::new(CanId::standard(0x123).unwrap(), vec![0; 9], false)
-            .unwrap_err();
+        let error = CanFrame::new(CanId::standard(0x123).unwrap(), vec![0; 9], false).unwrap_err();
 
         assert_eq!(
             error,
