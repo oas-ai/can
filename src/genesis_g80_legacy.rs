@@ -10,6 +10,7 @@ const CGW1: u16 = 1345;
 const LVR12: u16 = 871;
 const WHL_SPD11: u16 = 902;
 const SCC14: u16 = 905;
+const GW_DDM_PE: u16 = 1313;
 
 /// 승인된 Genesis DBC subset을 해석하지 못한 오류다.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -101,6 +102,36 @@ impl GenesisG80LegacyDecoder {
             "CF_Gway_HeadLampLow",
             SignalValue::Number(((data >> 31) & 1) as f64),
         );
+        for (signal, shift, mask) in [
+            ("CF_Gway_DrvDrSw", 8, 0x03),
+            ("CF_Gway_DrvSeatBeltSw", 10, 0x03),
+            ("CF_Gway_AstSeatBeltSw", 14, 0x03),
+            ("CF_Gway_WiperIntSw", 24, 0x01),
+            ("CF_Gway_WiperLowSw", 25, 0x01),
+            ("CF_Gway_WiperHighSw", 26, 0x01),
+            ("CF_Gway_WiperAutoSw", 27, 0x01),
+            ("CF_Gway_ALightStat", 37, 0x01),
+            ("CF_Gway_LightSwState", 38, 0x03),
+        ] {
+            message.insert_signal(signal, SignalValue::Number(((data >> shift) & mask) as f64));
+        }
+        Ok(message)
+    }
+
+    fn decode_door_status(
+        frame: &CanFrame,
+        context: DecodeContext,
+    ) -> Result<DecodedCanMessage, GenesisG80LegacyDecodeError> {
+        let data = Self::data_as_u64(frame, "GW_DDM_PE", 8)?;
+        let mut message = DecodedCanMessage::new(frame.id, "GW_DDM_PE", context);
+        for (signal, shift) in [
+            ("C_DRVDoorStatus", 0),
+            ("C_ASTDoorStatus", 2),
+            ("C_RLDoorStatus", 4),
+            ("C_RRDoorStatus", 6),
+        ] {
+            message.insert_signal(signal, SignalValue::Number(((data >> shift) & 0x03) as f64));
+        }
         Ok(message)
     }
 
@@ -164,6 +195,7 @@ impl FrameDecoder for GenesisG80LegacyDecoder {
             Some(LVR12) => Some(Self::decode_lvr12(frame, context)?),
             Some(WHL_SPD11) => Some(Self::decode_wheel_speed(frame, context)?),
             Some(SCC14) => Some(Self::decode_scc14(frame, context)?),
+            Some(GW_DDM_PE) => Some(Self::decode_door_status(frame, context)?),
             _ => None,
         };
         Ok(decoded)
