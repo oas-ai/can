@@ -28,4 +28,14 @@ BO_ 1345 CGW1: 8 BCM
 BO_ 871 LVR12: 8 LVR
  SG_ CF_Lvr_Gear : 32|4@1+ (1.0,0.0) [0.0|15.0] "" CLU
 
+BO_ 902 WHL_SPD11: 8 ABS
+ SG_ WHL_SPD_FL : 0|14@1+ (0.03125,0.0) [0.0|511.96875] "km/h" CLU
+ SG_ WHL_SPD_FR : 16|14@1+ (0.03125,0.0) [0.0|511.96875] "km/h" CLU
+ SG_ WHL_SPD_RL : 32|14@1+ (0.03125,0.0) [0.0|511.96875] "km/h" CLU
+ SG_ WHL_SPD_RR : 48|14@1+ (0.03125,0.0) [0.0|511.96875] "km/h" CLU
+
+BO_ 905 SCC14: 8 SCC
+ SG_ ACCMode : 32|3@1+ (1.0,0.0) [0.0|7.0] "" CLU
+
 VAL_ 871 CF_Lvr_Gear 12 "T" 5 "D" 8 "S" 6 "N" 7 "R" 0 "P";
+VAL_ 905 ACCMode 0 "off" 1 "enabled" 2 "driver_override" 3 "off_maybe_fault" 4 "cancelled";

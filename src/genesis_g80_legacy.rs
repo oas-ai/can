@@ -8,6 +8,8 @@ const SAS11: u16 = 688;
 const TCS13: u16 = 916;
 const CGW1: u16 = 1345;
 const LVR12: u16 = 871;
+const WHL_SPD11: u16 = 902;
+const SCC14: u16 = 905;
 
 /// 승인된 Genesis DBC subset을 해석하지 못한 오류다.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -114,6 +116,36 @@ impl GenesisG80LegacyDecoder {
         );
         Ok(message)
     }
+
+    fn decode_wheel_speed(
+        frame: &CanFrame,
+        context: DecodeContext,
+    ) -> Result<DecodedCanMessage, GenesisG80LegacyDecodeError> {
+        let data = Self::data_as_u64(frame, "WHL_SPD11", 8)?;
+        let mut message = DecodedCanMessage::new(frame.id, "WHL_SPD11", context);
+        for (signal, shift) in [
+            ("WHL_SPD_FL", 0),
+            ("WHL_SPD_FR", 16),
+            ("WHL_SPD_RL", 32),
+            ("WHL_SPD_RR", 48),
+        ] {
+            message.insert_signal(
+                signal,
+                SignalValue::Number(((data >> shift) & 0x3fff) as f64 * 0.03125),
+            );
+        }
+        Ok(message)
+    }
+
+    fn decode_scc14(
+        frame: &CanFrame,
+        context: DecodeContext,
+    ) -> Result<DecodedCanMessage, GenesisG80LegacyDecodeError> {
+        let data = Self::data_as_u64(frame, "SCC14", 8)?;
+        let mut message = DecodedCanMessage::new(frame.id, "SCC14", context);
+        message.insert_signal("ACCMode", SignalValue::Number(((data >> 32) & 0x07) as f64));
+        Ok(message)
+    }
 }
 
 impl FrameDecoder for GenesisG80LegacyDecoder {
@@ -130,6 +162,8 @@ impl FrameDecoder for GenesisG80LegacyDecoder {
             Some(TCS13) => Some(Self::decode_tcs13(frame, context)?),
             Some(CGW1) => Some(Self::decode_cgw1(frame, context)?),
             Some(LVR12) => Some(Self::decode_lvr12(frame, context)?),
+            Some(WHL_SPD11) => Some(Self::decode_wheel_speed(frame, context)?),
+            Some(SCC14) => Some(Self::decode_scc14(frame, context)?),
             _ => None,
         };
         Ok(decoded)
@@ -253,6 +287,44 @@ mod tests {
         assert_eq!(
             message.signals.get("CF_Lvr_Gear"),
             Some(&SignalValue::Number(5.0))
+        );
+    }
+
+    #[test]
+    fn decodes_wheel_speeds_and_cruise_mode() {
+        let wheel_speeds = CanFrame::new(
+            CanId::standard(902).unwrap(),
+            vec![0, 32, 0, 16, 0, 8, 0, 4],
+            false,
+        )
+        .unwrap();
+        let cruise = CanFrame::new(
+            CanId::standard(905).unwrap(),
+            vec![0, 0, 0, 0, 1, 0, 0, 0],
+            false,
+        )
+        .unwrap();
+
+        let wheels = GenesisG80LegacyDecoder
+            .decode(&wheel_speeds, context())
+            .unwrap()
+            .unwrap();
+        let cruise = GenesisG80LegacyDecoder
+            .decode(&cruise, context())
+            .unwrap()
+            .unwrap();
+
+        assert_eq!(
+            wheels.signals.get("WHL_SPD_FL"),
+            Some(&SignalValue::Number(256.0))
+        );
+        assert_eq!(
+            wheels.signals.get("WHL_SPD_RR"),
+            Some(&SignalValue::Number(32.0))
+        );
+        assert_eq!(
+            cruise.signals.get("ACCMode"),
+            Some(&SignalValue::Number(1.0))
         );
     }
 }
