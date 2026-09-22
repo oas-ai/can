@@ -206,7 +206,9 @@ impl FrameDecoder for HyundaiPalisade2020Decoder {
 mod tests {
     use crate::decode::{DecodeContext, FrameDecoder, SignalValue};
     use crate::frame::{CanFrame, CanId};
-    use crate::hyundai_palisade_2020::{HyundaiPalisade2020DecodeError, HyundaiPalisade2020Decoder};
+    use crate::hyundai_palisade_2020::{
+        HyundaiPalisade2020DecodeError, HyundaiPalisade2020Decoder,
+    };
 
     fn context() -> DecodeContext {
         DecodeContext {
