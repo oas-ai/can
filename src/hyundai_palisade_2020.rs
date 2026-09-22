@@ -1,4 +1,4 @@
-//! Genesis G80 2017 legacy CAN의 read-only DBC subset decoder다.
+//! Hyundai Palisade 2020 CAN의 read-only DBC subset decoder다.
 
 use crate::decode::{DecodeContext, DecodedCanMessage, FrameDecoder, SignalValue};
 use crate::frame::{CanFrame, CanId};
@@ -12,9 +12,9 @@ const WHL_SPD11: u16 = 902;
 const SCC14: u16 = 905;
 const GW_DDM_PE: u16 = 1313;
 
-/// 승인된 Genesis DBC subset을 해석하지 못한 오류다.
+/// 승인된 Hyundai Palisade DBC subset을 해석하지 못한 오류다.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum GenesisG80LegacyDecodeError {
+pub enum HyundaiPalisade2020DecodeError {
     UnexpectedFrameLength {
         message_name: &'static str,
         expected: usize,
@@ -22,11 +22,11 @@ pub enum GenesisG80LegacyDecodeError {
     },
 }
 
-/// Genesis G80 2017의 `hyundai_can.dbc` read-only subset decoder다.
+/// Hyundai Palisade 2020의 `hyundai_can.dbc` read-only subset decoder다.
 #[derive(Debug, Default)]
-pub struct GenesisG80LegacyDecoder;
+pub struct HyundaiPalisade2020Decoder;
 
-impl GenesisG80LegacyDecoder {
+impl HyundaiPalisade2020Decoder {
     fn standard_id(frame: &CanFrame) -> Option<u16> {
         match frame.id {
             CanId::Standard(id) => Some(id),
@@ -38,9 +38,9 @@ impl GenesisG80LegacyDecoder {
         frame: &CanFrame,
         message_name: &'static str,
         expected: usize,
-    ) -> Result<u64, GenesisG80LegacyDecodeError> {
+    ) -> Result<u64, HyundaiPalisade2020DecodeError> {
         if frame.data.len() != expected {
-            return Err(GenesisG80LegacyDecodeError::UnexpectedFrameLength {
+            return Err(HyundaiPalisade2020DecodeError::UnexpectedFrameLength {
                 message_name,
                 expected,
                 actual: frame.data.len(),
@@ -55,7 +55,7 @@ impl GenesisG80LegacyDecoder {
     fn decode_clu11(
         frame: &CanFrame,
         context: DecodeContext,
-    ) -> Result<DecodedCanMessage, GenesisG80LegacyDecodeError> {
+    ) -> Result<DecodedCanMessage, HyundaiPalisade2020DecodeError> {
         let data = Self::data_as_u64(frame, "CLU11", 4)?;
         let speed = ((data >> 8) & 0x1ff) as f64 * 0.5 + ((data >> 6) & 0x3) as f64 * 0.125;
         let unit = if (data >> 17) & 1 == 0 { "kph" } else { "mph" };
@@ -69,7 +69,7 @@ impl GenesisG80LegacyDecoder {
     fn decode_sas11(
         frame: &CanFrame,
         context: DecodeContext,
-    ) -> Result<DecodedCanMessage, GenesisG80LegacyDecodeError> {
+    ) -> Result<DecodedCanMessage, HyundaiPalisade2020DecodeError> {
         let data = Self::data_as_u64(frame, "SAS11", 5)?;
         let angle = (data as i16) as f64 * 0.1;
 
@@ -81,7 +81,7 @@ impl GenesisG80LegacyDecoder {
     fn decode_tcs13(
         frame: &CanFrame,
         context: DecodeContext,
-    ) -> Result<DecodedCanMessage, GenesisG80LegacyDecodeError> {
+    ) -> Result<DecodedCanMessage, HyundaiPalisade2020DecodeError> {
         let data = Self::data_as_u64(frame, "TCS13", 8)?;
         let acceleration = ((data >> 32) & 0x7ff) as f64 * 0.01 - 10.23;
         let driver_override = ((data >> 45) & 0x3) as f64;
@@ -95,7 +95,7 @@ impl GenesisG80LegacyDecoder {
     fn decode_cgw1(
         frame: &CanFrame,
         context: DecodeContext,
-    ) -> Result<DecodedCanMessage, GenesisG80LegacyDecodeError> {
+    ) -> Result<DecodedCanMessage, HyundaiPalisade2020DecodeError> {
         let data = Self::data_as_u64(frame, "CGW1", 8)?;
         let mut message = DecodedCanMessage::new(frame.id, "CGW1", context);
         message.insert_signal(
@@ -121,7 +121,7 @@ impl GenesisG80LegacyDecoder {
     fn decode_door_status(
         frame: &CanFrame,
         context: DecodeContext,
-    ) -> Result<DecodedCanMessage, GenesisG80LegacyDecodeError> {
+    ) -> Result<DecodedCanMessage, HyundaiPalisade2020DecodeError> {
         let data = Self::data_as_u64(frame, "GW_DDM_PE", 8)?;
         let mut message = DecodedCanMessage::new(frame.id, "GW_DDM_PE", context);
         for (signal, shift) in [
@@ -138,7 +138,7 @@ impl GenesisG80LegacyDecoder {
     fn decode_lvr12(
         frame: &CanFrame,
         context: DecodeContext,
-    ) -> Result<DecodedCanMessage, GenesisG80LegacyDecodeError> {
+    ) -> Result<DecodedCanMessage, HyundaiPalisade2020DecodeError> {
         let data = Self::data_as_u64(frame, "LVR12", 8)?;
         let mut message = DecodedCanMessage::new(frame.id, "LVR12", context);
         message.insert_signal(
@@ -151,7 +151,7 @@ impl GenesisG80LegacyDecoder {
     fn decode_wheel_speed(
         frame: &CanFrame,
         context: DecodeContext,
-    ) -> Result<DecodedCanMessage, GenesisG80LegacyDecodeError> {
+    ) -> Result<DecodedCanMessage, HyundaiPalisade2020DecodeError> {
         let data = Self::data_as_u64(frame, "WHL_SPD11", 8)?;
         let mut message = DecodedCanMessage::new(frame.id, "WHL_SPD11", context);
         for (signal, shift) in [
@@ -171,7 +171,7 @@ impl GenesisG80LegacyDecoder {
     fn decode_scc14(
         frame: &CanFrame,
         context: DecodeContext,
-    ) -> Result<DecodedCanMessage, GenesisG80LegacyDecodeError> {
+    ) -> Result<DecodedCanMessage, HyundaiPalisade2020DecodeError> {
         let data = Self::data_as_u64(frame, "SCC14", 8)?;
         let mut message = DecodedCanMessage::new(frame.id, "SCC14", context);
         message.insert_signal("ACCMode", SignalValue::Number(((data >> 32) & 0x07) as f64));
@@ -179,8 +179,8 @@ impl GenesisG80LegacyDecoder {
     }
 }
 
-impl FrameDecoder for GenesisG80LegacyDecoder {
-    type Error = GenesisG80LegacyDecodeError;
+impl FrameDecoder for HyundaiPalisade2020Decoder {
+    type Error = HyundaiPalisade2020DecodeError;
 
     fn decode(
         &self,
@@ -206,7 +206,7 @@ impl FrameDecoder for GenesisG80LegacyDecoder {
 mod tests {
     use crate::decode::{DecodeContext, FrameDecoder, SignalValue};
     use crate::frame::{CanFrame, CanId};
-    use crate::genesis_g80_legacy::{GenesisG80LegacyDecodeError, GenesisG80LegacyDecoder};
+    use crate::hyundai_palisade_2020::{HyundaiPalisade2020DecodeError, HyundaiPalisade2020Decoder};
 
     fn context() -> DecodeContext {
         DecodeContext {
@@ -219,7 +219,7 @@ mod tests {
     fn decodes_cluster_speed_in_kph() {
         let frame =
             CanFrame::new(CanId::standard(1265).unwrap(), vec![0, 160, 0, 0], false).unwrap();
-        let message = GenesisG80LegacyDecoder
+        let message = HyundaiPalisade2020Decoder
             .decode(&frame, context())
             .unwrap()
             .unwrap();
@@ -246,11 +246,11 @@ mod tests {
         )
         .unwrap();
 
-        let steering_message = GenesisG80LegacyDecoder
+        let steering_message = HyundaiPalisade2020Decoder
             .decode(&steering, context())
             .unwrap()
             .unwrap();
-        let braking_message = GenesisG80LegacyDecoder
+        let braking_message = HyundaiPalisade2020Decoder
             .decode(&accelerating_and_braking, context())
             .unwrap()
             .unwrap();
@@ -274,10 +274,10 @@ mod tests {
         let frame = CanFrame::new(CanId::standard(688).unwrap(), vec![0; 4], false).unwrap();
 
         assert_eq!(
-            GenesisG80LegacyDecoder
+            HyundaiPalisade2020Decoder
                 .decode(&frame, context())
                 .unwrap_err(),
-            GenesisG80LegacyDecodeError::UnexpectedFrameLength {
+            HyundaiPalisade2020DecodeError::UnexpectedFrameLength {
                 message_name: "SAS11",
                 expected: 5,
                 actual: 4,
@@ -293,7 +293,7 @@ mod tests {
             false,
         )
         .unwrap();
-        let message = GenesisG80LegacyDecoder
+        let message = HyundaiPalisade2020Decoder
             .decode(&frame, context())
             .unwrap()
             .unwrap();
@@ -311,7 +311,7 @@ mod tests {
             false,
         )
         .unwrap();
-        let message = GenesisG80LegacyDecoder
+        let message = HyundaiPalisade2020Decoder
             .decode(&frame, context())
             .unwrap()
             .unwrap();
@@ -337,11 +337,11 @@ mod tests {
         )
         .unwrap();
 
-        let wheels = GenesisG80LegacyDecoder
+        let wheels = HyundaiPalisade2020Decoder
             .decode(&wheel_speeds, context())
             .unwrap()
             .unwrap();
-        let cruise = GenesisG80LegacyDecoder
+        let cruise = HyundaiPalisade2020Decoder
             .decode(&cruise, context())
             .unwrap()
             .unwrap();

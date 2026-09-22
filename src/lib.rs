@@ -5,4 +5,4 @@
 pub mod decode;
 pub mod fixture;
 pub mod frame;
-pub mod genesis_g80_legacy;
+pub mod hyundai_palisade_2020;

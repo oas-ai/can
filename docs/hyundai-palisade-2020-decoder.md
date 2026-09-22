@@ -1,6 +1,6 @@
-# Genesis G80 Legacy Decoder
+# Hyundai Palisade 2020 Legacy Decoder
 
-`GenesisG80LegacyDecoder`는 `dbc` 저장소의 `GENESIS_G80_2017` provenance manifest에
+`HyundaiPalisade2020Decoder`는 `dbc` 저장소의 `HYUNDAI_PALISADE_2020` provenance manifest에
 고정된 Hyundai legacy CAN DBC 중 상태에 필요한 일곱 메시지만 직접 해석합니다.
 
 | DBC message | 신호 | OAS 용도 |
@@ -17,7 +17,7 @@
 frame은 정상적으로 무시하고, 알려진 메시지의 payload 길이가 다르면 오류를 반환한다.
 
 사용하는 DBC는 opendbc의 MIT 라이선스 `hyundai_can.dbc`를 특정 커밋으로 고정한
-[read-only subset](../dbc/genesis_g80_2017_read_only.dbc)이다. 원본 revision·hash·고지는
+[read-only subset](../dbc/hyundai_palisade_2020_read_only.dbc)이다. 원본 revision·hash·고지는
 [NOTICE](../dbc/NOTICE.md)에 있다.
 
 ## 실차 신호 검증
@@ -35,7 +35,7 @@ Canable가 SocketCAN `can0`으로 연결된 뒤, 수신 전용으로 timestamp �
 
 ```sh
 ip -details link show can0
-candump -L -t a can0,541:7FF > g80-cgw1-lamps.log
+candump -L -t a can0,541:7FF > palisade-cgw1-lamps.log
 ```
 
 각 조건을 바꿀 때 시각과 관찰한 램프 상태를 별도로 기록하고, 로그의 payload 네 번째
@@ -48,7 +48,7 @@ DBC와 차량 연식·트림을 다시 확인한다.
 sudo modprobe vcan
 sudo ip link add dev vcan0 type vcan
 sudo ip link set vcan0 up
-canplayer -I g80-cgw1-lamps.log vcan0=can0
+canplayer -I palisade-cgw1-lamps.log vcan0=can0
 ```
 
 회귀 fixture에는 차량 식별 정보·위치·시간 등 민감한 원본 로그를 넣지 말고, 검증된
