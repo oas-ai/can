@@ -78,9 +78,11 @@ impl GenesisG80LegacyDecoder {
         context: DecodeContext,
     ) -> Result<DecodedCanMessage, GenesisG80LegacyDecodeError> {
         let data = Self::data_as_u64(frame, "TCS13", 8)?;
+        let acceleration = ((data >> 32) & 0x7ff) as f64 * 0.01 - 10.23;
         let driver_override = ((data >> 45) & 0x3) as f64;
 
         let mut message = DecodedCanMessage::new(frame.id, "TCS13", context);
+        message.insert_signal("ACCEL_REF_ACC", SignalValue::Number(acceleration));
         message.insert_signal("DriverOverride", SignalValue::Number(driver_override));
         Ok(message)
     }
@@ -138,12 +140,12 @@ mod tests {
     }
 
     #[test]
-    fn decodes_steering_and_driver_braking() {
+    fn decodes_steering_acceleration_and_driver_braking() {
         let steering =
             CanFrame::new(CanId::standard(688).unwrap(), vec![132, 3, 0, 0, 0], false).unwrap();
-        let braking = CanFrame::new(
+        let accelerating_and_braking = CanFrame::new(
             CanId::standard(916).unwrap(),
-            vec![0, 0, 0, 0, 0, 64, 0, 0],
+            vec![0, 0, 0, 0, 124, 68, 0, 0],
             false,
         )
         .unwrap();
@@ -153,13 +155,17 @@ mod tests {
             .unwrap()
             .unwrap();
         let braking_message = GenesisG80LegacyDecoder
-            .decode(&braking, context())
+            .decode(&accelerating_and_braking, context())
             .unwrap()
             .unwrap();
 
         assert_eq!(
             steering_message.signals.get("SAS_Angle"),
             Some(&SignalValue::Number(90.0))
+        );
+        assert_eq!(
+            braking_message.signals.get("ACCEL_REF_ACC"),
+            Some(&SignalValue::Number(1.25))
         );
         assert_eq!(
             braking_message.signals.get("DriverOverride"),
