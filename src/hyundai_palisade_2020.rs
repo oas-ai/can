@@ -142,10 +142,7 @@ impl HyundaiPalisade2020Decoder {
     ) -> Result<DecodedCanMessage, HyundaiPalisade2020DecodeError> {
         let data = Self::data_as_u64(frame, "DATC12", 8)?;
         let mut message = DecodedCanMessage::new(frame.id, "DATC12", context);
-        for (signal, shift) in [
-            ("CR_Datc_DrTempDispC", 0),
-            ("CR_Datc_PsTempDispC", 16),
-        ] {
+        for (signal, shift) in [("CR_Datc_DrTempDispC", 0), ("CR_Datc_PsTempDispC", 16)] {
             message.insert_signal(
                 signal,
                 SignalValue::Number(((data >> shift) & 0xff) as f64 * 0.5 + 14.0),
