@@ -6,6 +6,7 @@ use crate::frame::{CanFrame, CanId};
 const CLU11: u16 = 1265;
 const SAS11: u16 = 688;
 const TCS13: u16 = 916;
+const CGW1: u16 = 1345;
 
 /// 승인된 Genesis DBC subset을 해석하지 못한 오류다.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -86,6 +87,19 @@ impl GenesisG80LegacyDecoder {
         message.insert_signal("DriverOverride", SignalValue::Number(driver_override));
         Ok(message)
     }
+
+    fn decode_cgw1(
+        frame: &CanFrame,
+        context: DecodeContext,
+    ) -> Result<DecodedCanMessage, GenesisG80LegacyDecodeError> {
+        let data = Self::data_as_u64(frame, "CGW1", 8)?;
+        let mut message = DecodedCanMessage::new(frame.id, "CGW1", context);
+        message.insert_signal(
+            "CF_Gway_HeadLampLow",
+            SignalValue::Number(((data >> 31) & 1) as f64),
+        );
+        Ok(message)
+    }
 }
 
 impl FrameDecoder for GenesisG80LegacyDecoder {
@@ -100,6 +114,7 @@ impl FrameDecoder for GenesisG80LegacyDecoder {
             Some(CLU11) => Some(Self::decode_clu11(frame, context)?),
             Some(SAS11) => Some(Self::decode_sas11(frame, context)?),
             Some(TCS13) => Some(Self::decode_tcs13(frame, context)?),
+            Some(CGW1) => Some(Self::decode_cgw1(frame, context)?),
             _ => None,
         };
         Ok(decoded)
@@ -186,6 +201,24 @@ mod tests {
                 expected: 5,
                 actual: 4,
             }
+        );
+    }
+
+    #[test]
+    fn decodes_low_beam_as_night_signal() {
+        let frame = CanFrame::new(
+            CanId::standard(1345).unwrap(),
+            vec![0, 0, 0, 128, 0, 0, 0, 0],
+            false,
+        )
+        .unwrap();
+        let message = GenesisG80LegacyDecoder
+            .decode(&frame, context())
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            message.signals.get("CF_Gway_HeadLampLow"),
+            Some(&SignalValue::Number(1.0))
         );
     }
 }
