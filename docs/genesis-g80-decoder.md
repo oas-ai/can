@@ -1,7 +1,7 @@
 # Genesis G80 Legacy Decoder
 
 `GenesisG80LegacyDecoder`는 `dbc` 저장소의 `GENESIS_G80_2017` provenance manifest에
-고정된 Hyundai legacy CAN DBC 중 상태에 필요한 네 메시지만 직접 해석합니다.
+고정된 Hyundai legacy CAN DBC 중 상태에 필요한 다섯 메시지만 직접 해석합니다.
 
 | DBC message | 신호 | OAS 용도 |
 | --- | --- | --- |
@@ -9,9 +9,14 @@
 | `SAS11` | `SAS_Angle` | 조향각 |
 | `TCS13` | `ACCEL_REF_ACC`, `DriverOverride` | 종가속도와 운전자 제동 상태 |
 | `CGW1` (`0x541`) | `CF_Gway_HeadLampLow` | 저빔 기반 `night_mode` |
+| `LVR12` (`0x367`) | `CF_Lvr_Gear` | 선택 레버 기어 상태 |
 
 이는 전체 DBC parser가 아니라 승인된 schema의 좁은 read-only 구현이다. 알 수 없는
 frame은 정상적으로 무시하고, 알려진 메시지의 payload 길이가 다르면 오류를 반환한다.
+
+사용하는 DBC는 opendbc의 MIT 라이선스 `hyundai_can.dbc`를 특정 커밋으로 고정한
+[read-only subset](../dbc/genesis_g80_2017_read_only.dbc)이다. 원본 revision·hash·고지는
+[NOTICE](../dbc/NOTICE.md)에 있다.
 
 ## 실차 신호 검증
 

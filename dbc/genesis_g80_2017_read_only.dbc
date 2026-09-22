@@ -1,0 +1,31 @@
+VERSION "OAS derived read-only subset"
+
+NS_ :
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+
+BS_:
+
+BU_: BCM CLU ESC LVR MDPS
+
+BO_ 1265 CLU11: 4 CLU
+ SG_ CF_Clu_VanzDecimal : 6|2@1+ (0.125,0.0) [0.0|0.375] "" EMS
+ SG_ CF_Clu_Vanz : 8|9@1+ (0.5,0.0) [0.0|255.5] "km/h or MPH" BCM
+ SG_ CF_Clu_SPEED_UNIT : 17|1@1+ (1.0,0.0) [0.0|1.0] "" BCM
+
+BO_ 688 SAS11: 5 MDPS
+ SG_ SAS_Angle : 0|16@1- (0.1,0.0) [-3276.8|3276.7] "Deg" CLU
+
+BO_ 916 TCS13: 8 ESC
+ SG_ ACCEL_REF_ACC : 32|11@1+ (0.01,-10.23) [-10.23|10.24] "m/s^2" EMS
+ SG_ DriverOverride : 45|2@1+ (1.0,0.0) [0.0|3.0] "" CLU
+
+BO_ 1345 CGW1: 8 BCM
+ SG_ CF_Gway_HeadLampLow : 31|1@1+ (1.0,0.0) [0.0|1.0] "" CLU
+
+BO_ 871 LVR12: 8 LVR
+ SG_ CF_Lvr_Gear : 32|4@1+ (1.0,0.0) [0.0|15.0] "" CLU
+
+VAL_ 871 CF_Lvr_Gear 12 "T" 5 "D" 8 "S" 6 "N" 7 "R" 0 "P";

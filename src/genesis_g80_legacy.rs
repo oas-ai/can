@@ -7,6 +7,7 @@ const CLU11: u16 = 1265;
 const SAS11: u16 = 688;
 const TCS13: u16 = 916;
 const CGW1: u16 = 1345;
+const LVR12: u16 = 871;
 
 /// 승인된 Genesis DBC subset을 해석하지 못한 오류다.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -100,6 +101,19 @@ impl GenesisG80LegacyDecoder {
         );
         Ok(message)
     }
+
+    fn decode_lvr12(
+        frame: &CanFrame,
+        context: DecodeContext,
+    ) -> Result<DecodedCanMessage, GenesisG80LegacyDecodeError> {
+        let data = Self::data_as_u64(frame, "LVR12", 8)?;
+        let mut message = DecodedCanMessage::new(frame.id, "LVR12", context);
+        message.insert_signal(
+            "CF_Lvr_Gear",
+            SignalValue::Number(((data >> 32) & 0x0f) as f64),
+        );
+        Ok(message)
+    }
 }
 
 impl FrameDecoder for GenesisG80LegacyDecoder {
@@ -115,6 +129,7 @@ impl FrameDecoder for GenesisG80LegacyDecoder {
             Some(SAS11) => Some(Self::decode_sas11(frame, context)?),
             Some(TCS13) => Some(Self::decode_tcs13(frame, context)?),
             Some(CGW1) => Some(Self::decode_cgw1(frame, context)?),
+            Some(LVR12) => Some(Self::decode_lvr12(frame, context)?),
             _ => None,
         };
         Ok(decoded)
@@ -219,6 +234,25 @@ mod tests {
         assert_eq!(
             message.signals.get("CF_Gway_HeadLampLow"),
             Some(&SignalValue::Number(1.0))
+        );
+    }
+
+    #[test]
+    fn decodes_lvr12_gear() {
+        let frame = CanFrame::new(
+            CanId::standard(871).unwrap(),
+            vec![0, 0, 0, 0, 5, 0, 0, 0],
+            false,
+        )
+        .unwrap();
+        let message = GenesisG80LegacyDecoder
+            .decode(&frame, context())
+            .unwrap()
+            .unwrap();
+
+        assert_eq!(
+            message.signals.get("CF_Lvr_Gear"),
+            Some(&SignalValue::Number(5.0))
         );
     }
 }
