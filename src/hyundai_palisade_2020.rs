@@ -11,6 +11,7 @@ const LVR12: u16 = 871;
 const WHL_SPD11: u16 = 902;
 const SCC14: u16 = 905;
 const GW_DDM_PE: u16 = 1313;
+const DATC12: u16 = 66;
 
 /// 승인된 Hyundai Palisade DBC subset을 해석하지 못한 오류다.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -135,6 +136,24 @@ impl HyundaiPalisade2020Decoder {
         Ok(message)
     }
 
+    fn decode_datc12(
+        frame: &CanFrame,
+        context: DecodeContext,
+    ) -> Result<DecodedCanMessage, HyundaiPalisade2020DecodeError> {
+        let data = Self::data_as_u64(frame, "DATC12", 8)?;
+        let mut message = DecodedCanMessage::new(frame.id, "DATC12", context);
+        for (signal, shift) in [
+            ("CR_Datc_DrTempDispC", 0),
+            ("CR_Datc_PsTempDispC", 16),
+        ] {
+            message.insert_signal(
+                signal,
+                SignalValue::Number(((data >> shift) & 0xff) as f64 * 0.5 + 14.0),
+            );
+        }
+        Ok(message)
+    }
+
     fn decode_lvr12(
         frame: &CanFrame,
         context: DecodeContext,
@@ -196,6 +215,7 @@ impl FrameDecoder for HyundaiPalisade2020Decoder {
             Some(WHL_SPD11) => Some(Self::decode_wheel_speed(frame, context)?),
             Some(SCC14) => Some(Self::decode_scc14(frame, context)?),
             Some(GW_DDM_PE) => Some(Self::decode_door_status(frame, context)?),
+            Some(DATC12) => Some(Self::decode_datc12(frame, context)?),
             _ => None,
         };
         Ok(decoded)
@@ -302,6 +322,66 @@ mod tests {
         assert_eq!(
             message.signals.get("CF_Gway_HeadLampLow"),
             Some(&SignalValue::Number(1.0))
+        );
+    }
+
+    #[test]
+    fn decodes_raw_body_and_climate_catalog_signals() {
+        let gateway = CanFrame::new(
+            CanId::standard(1345).unwrap(),
+            vec![0, 21, 64, 140, 64, 0, 0, 0],
+            false,
+        )
+        .unwrap();
+        let doors = CanFrame::new(
+            CanId::standard(1313).unwrap(),
+            vec![57, 0, 0, 0, 0, 0, 0, 0],
+            false,
+        )
+        .unwrap();
+        let climate = CanFrame::new(
+            CanId::standard(66).unwrap(),
+            vec![12, 0, 16, 0, 0, 0, 0, 0],
+            false,
+        )
+        .unwrap();
+
+        let gateway = HyundaiPalisade2020Decoder
+            .decode(&gateway, context())
+            .unwrap()
+            .unwrap();
+        let doors = HyundaiPalisade2020Decoder
+            .decode(&doors, context())
+            .unwrap()
+            .unwrap();
+        let climate = HyundaiPalisade2020Decoder
+            .decode(&climate, context())
+            .unwrap()
+            .unwrap();
+
+        assert_eq!(
+            gateway.signals.get("CF_Gway_DrvDrSw"),
+            Some(&SignalValue::Number(1.0))
+        );
+        assert_eq!(
+            gateway.signals.get("CF_Gway_DrvSeatBeltSw"),
+            Some(&SignalValue::Number(1.0))
+        );
+        assert_eq!(
+            doors.signals.get("C_DRVDoorStatus"),
+            Some(&SignalValue::Number(1.0))
+        );
+        assert_eq!(
+            doors.signals.get("C_RRDoorStatus"),
+            Some(&SignalValue::Number(0.0))
+        );
+        assert_eq!(
+            climate.signals.get("CR_Datc_DrTempDispC"),
+            Some(&SignalValue::Number(20.0))
+        );
+        assert_eq!(
+            climate.signals.get("CR_Datc_PsTempDispC"),
+            Some(&SignalValue::Number(22.0))
         );
     }
 

@@ -23,7 +23,26 @@ BO_ 916 TCS13: 8 ESC
  SG_ DriverOverride : 45|2@1+ (1.0,0.0) [0.0|3.0] "" CLU
 
 BO_ 1345 CGW1: 8 BCM
+ SG_ CF_Gway_DrvDrSw : 8|2@1+ (1.0,0.0) [0.0|3.0] "" CLU
+ SG_ CF_Gway_DrvSeatBeltSw : 10|2@1+ (1.0,0.0) [0.0|3.0] "" CLU
+ SG_ CF_Gway_AstSeatBeltSw : 14|2@1+ (1.0,0.0) [0.0|3.0] "" CLU
+ SG_ CF_Gway_WiperIntSw : 24|1@1+ (1.0,0.0) [0.0|1.0] "" CLU
+ SG_ CF_Gway_WiperLowSw : 25|1@1+ (1.0,0.0) [0.0|1.0] "" CLU
+ SG_ CF_Gway_WiperHighSw : 26|1@1+ (1.0,0.0) [0.0|1.0] "" CLU
+ SG_ CF_Gway_WiperAutoSw : 27|1@1+ (1.0,0.0) [0.0|1.0] "" CLU
  SG_ CF_Gway_HeadLampLow : 31|1@1+ (1.0,0.0) [0.0|1.0] "" CLU
+ SG_ CF_Gway_ALightStat : 37|1@1+ (1.0,0.0) [0.0|1.0] "" CLU
+ SG_ CF_Gway_LightSwState : 38|2@1+ (1.0,0.0) [0.0|3.0] "" CLU
+
+BO_ 1313 GW_DDM_PE: 8 BCM
+ SG_ C_DRVDoorStatus : 0|2@1+ (1.0,0.0) [0.0|3.0] "" CLU
+ SG_ C_ASTDoorStatus : 2|2@1+ (1.0,0.0) [0.0|3.0] "" CLU
+ SG_ C_RLDoorStatus : 4|2@1+ (1.0,0.0) [0.0|3.0] "" CLU
+ SG_ C_RRDoorStatus : 6|2@1+ (1.0,0.0) [0.0|3.0] "" CLU
+
+BO_ 66 DATC12: 8 DATC
+ SG_ CR_Datc_DrTempDispC : 0|8@1+ (0.5,14.0) [15.0|32.0] "deg" CLU
+ SG_ CR_Datc_PsTempDispC : 16|8@1+ (0.5,14.0) [15.0|32.0] "deg" CLU
 
 BO_ 871 LVR12: 8 LVR
  SG_ CF_Lvr_Gear : 32|4@1+ (1.0,0.0) [0.0|15.0] "" CLU

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add DBC-trusted Palisade body, door, seatbelt, and climate raw diagnostics signals.
 - Add a read-only Hyundai Palisade 2020 decoder for cluster speed, steering angle, acceleration, driver braking, and CGW1 low-beam night mode.
 
 ## [0.1.0] - 2026-09-21

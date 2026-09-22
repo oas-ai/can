@@ -1,8 +1,8 @@
 # Hyundai Palisade 2020 read-only DBC subset
 
 `hyundai_palisade_2020_read_only.dbc`는 commaai/opendbc의
-`opendbc/dbc/generator/hyundai/hyundai_can.dbc`에서 OAS canonical state에 사용하는
-read-only 메시지만 추린 파생물입니다.
+`opendbc/dbc/generator/hyundai/hyundai_can.dbc`에서 OAS canonical state 및 DBC 기반
+raw diagnostics에 사용하는 read-only 메시지만 추린 파생물입니다.
 
 - Upstream revision: `ba800b77187208286f39c22f692ac7c69e9324f2`
 - Upstream file SHA-256: `a3fb6e98bfdc0041914643f1422b1bb9290462981c40249a05cd7773e71a8bc3`

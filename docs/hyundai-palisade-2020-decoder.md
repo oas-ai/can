@@ -1,20 +1,36 @@
 # Hyundai Palisade 2020 Legacy Decoder
 
 `HyundaiPalisade2020Decoder`는 `dbc` 저장소의 `HYUNDAI_PALISADE_2020` provenance manifest에
-고정된 Hyundai legacy CAN DBC 중 상태에 필요한 일곱 메시지만 직접 해석합니다.
+고정된 Hyundai legacy CAN DBC 중 canonical 상태와 진단에 필요한 아홉 메시지만 직접 해석합니다.
 
 | DBC message | 신호 | OAS 용도 |
 | --- | --- | --- |
 | `CLU11` | `CF_Clu_Vanz`, `CF_Clu_SPEED_UNIT` | 클러스터 속도와 단위 |
 | `SAS11` | `SAS_Angle` | 조향각 |
 | `TCS13` | `ACCEL_REF_ACC`, `DriverOverride` | 종가속도와 운전자 제동 상태 |
-| `CGW1` (`0x541`) | `CF_Gway_HeadLampLow` | 저빔 기반 `night_mode` |
+| `CGW1` (`0x541`) | 저빔, 운전석 도어·앞좌석 안전벨트, 와이퍼·조명 스위치 | 저빔은 `night_mode`, 나머지는 raw diagnostics |
+| `GW_DDM_PE` (`0x521`) | 네 도어 상태 | raw diagnostics |
+| `DATC12` (`0x042`) | 운전석·동승석 섭씨 설정 온도 | raw diagnostics |
 | `LVR12` (`0x367`) | `CF_Lvr_Gear` | 선택 레버 기어 상태 |
 | `WHL_SPD11` (`0x386`) | `WHL_SPD_FL/FR/RL/RR` | 바퀴별 속도 |
 | `SCC14` (`0x389`) | `ACCMode` | SCC 활성 상태 |
 
 이는 전체 DBC parser가 아니라 승인된 schema의 좁은 read-only 구현이다. 알 수 없는
 frame은 정상적으로 무시하고, 알려진 메시지의 payload 길이가 다르면 오류를 반환한다.
+
+## DBC 기반 raw diagnostics catalog
+
+현재는 실차 캡처가 없으므로 provenance manifest에 고정한 DBC의 message ID, bit 위치, scale을
+신뢰하여 아래 신호를 raw catalog로 제공합니다. 값은 `VehicleState.raw_signals`에
+`MESSAGE.SIGNAL` 키로 전달되어 HMI Diagnostics에서 read-only로 볼 수 있다. DBC enum 값의
+의미를 임의로 해석하거나 door/seatbelt/climate canonical 상태 또는 차량 제어에 사용하지 않는다.
+
+| Key | DBC 물리값 |
+| --- | --- |
+| `CGW1.CF_Gway_DrvDrSw` | 운전석 도어 스위치 raw enum |
+| `CGW1.CF_Gway_DrvSeatBeltSw`, `CGW1.CF_Gway_AstSeatBeltSw` | 앞좌석 안전벨트 raw enum |
+| `GW_DDM_PE.C_DRVDoorStatus`, `C_ASTDoorStatus`, `C_RLDoorStatus`, `C_RRDoorStatus` | 네 도어 raw enum |
+| `DATC12.CR_Datc_DrTempDispC`, `CR_Datc_PsTempDispC` | 섭씨 설정 온도 (`raw × 0.5 + 14`) |
 
 사용하는 DBC는 opendbc의 MIT 라이선스 `hyundai_can.dbc`를 특정 커밋으로 고정한
 [read-only subset](../dbc/hyundai_palisade_2020_read_only.dbc)이다. 원본 revision·hash·고지는
